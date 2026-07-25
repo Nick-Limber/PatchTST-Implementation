@@ -9,4 +9,16 @@ venv/
 .env
 
 # OS
-.DS_Store
+.DS_Storei
+
+# Training data
+experiments/runs/*
+!experiments/runs/.gitkeep
+
+outputs/figures/*
+outputs/reports/*
+!outputs/figures/.gitkeep
+!outputs/reports/.gitkeep
+
+# Notebooks
+.ipynb_checkpoints/ 
