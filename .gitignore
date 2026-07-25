@@ -9,7 +9,7 @@ venv/
 .env
 
 # OS
-.DS_Storei
+.DS_Store
 
 # Training data
 experiments/runs/*
