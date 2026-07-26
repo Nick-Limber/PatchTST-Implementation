@@ -3,14 +3,13 @@ import torch.nn as nn
 import pandas as pd
 from torch.utils.data import DataLoader
 import os
-
+import sys
 from src.data_layer.synthetic import generate_dataset
 from src.training.dataset import SlidingWindowDataset
 from src.training.losses import POINT_LOSSES
-
+from src.models.patchtst.model import PatchTST
 
 df = generate_dataset(n_series=10, n_days=250, seed=10, start_date="2022-01-01")
-
 
 def train_validate_split(df: pd.DataFrame, train_percent: float = 0.8):
     train_frames = []
@@ -189,40 +188,54 @@ class LinearBaseline(nn.Module):
 if __name__ == "__main__":
 
     config = {
-            "model" : {
-            "context_len": 32,
-            "horizon": 7,
+        "model": {
+            "context_len": 96,
+            "horizon": 28,
+            "patch_len": 16,
+            "stride": 8,
+            "d_model": 64,
+            "n_heads": 4,
+            "n_layers": 3,
+            "d_feedforward": 256,
+            "dropout": 0.1,
         },
         "data": {
             "train_percent": 0.8,
         },
         "training": {
-            "epochs": 10,
-            "learning_rate": 0.001,
+            "epochs": 150,
+            "learning_rate": 0.00001,
             "batch_size": 32,
-            "early_stopping_patience": 5,
+            "early_stopping_patience": 10,
             "grad_clip": 1.0,
             "loss": "mse",
         },
     }
  
-    df = generate_dataset(n_series=5, n_days=200, seed=0, noise_std=1.0)
+    df = generate_dataset(n_series=10, n_days=1000, seed=0, noise_std=2.0)
  
-    model = LinearBaseline(
-        context_len=config["model"]["context_len"],
-        horizon=config["model"]["horizon"],
+    model = PatchTST(
+            context_len=config["model"]["context_len"],
+            patch_len=config["model"]["patch_len"],
+            stride=config["model"]["stride"],
+            d_model=config["model"]["d_model"],
+            n_heads=config["model"]["n_heads"],
+            n_layers=config["model"]["n_layers"],
+            d_feedforward=config["model"]["d_feedforward"],
+            dropout=config["model"]["dropout"],
+            horizon=config["model"]["horizon"]
     )
  
     history = train(
         model=model,
         df=df,
         config=config,
-        checkpoint_path="experiments/runs/linear_baseline/best.pt",
+        checkpoint_path="experiments/runs/patchtst_baseline/best.pt",
     )
  
-    print("\nLoss curve (first and last 3 epochs):")
+    print("\nLoss curve (first and last 3 epoch):")
     for i, (tr, va) in enumerate(
-        zip(history["train_loss"], history["val_loss"]), start=1
+        zip(history["train_loss"], history["val_loss "]), start=1
     ):
         if i <= 3 or i > len(history["train_loss"]) - 3:
             print(f"  epoch {i:02d}: train={tr:.4f}  val={va:.4f}")

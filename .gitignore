@@ -22,3 +22,4 @@ outputs/reports/*
 
 # Notebooks
 .ipynb_checkpoints/ 
+notebooks/*.ipynb
