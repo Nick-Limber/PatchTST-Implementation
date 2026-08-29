@@ -3,3 +3,6 @@ pandas
 pytest
 torch
 statsmodels
+requests
+s3fs
+pyarrow
