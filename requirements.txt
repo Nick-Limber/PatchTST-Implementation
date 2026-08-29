@@ -1,6 +1,10 @@
 numpy
 pandas
 pytest
+<<<<<<< HEAD
 requests
 s3fs
 pyarrow
+=======
+torch
+>>>>>>> f3509e4ac3be827ee083cedc4a74076e15424072
