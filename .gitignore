@@ -10,3 +10,16 @@ venv/
 
 # OS
 .DS_Store
+
+# Training data
+experiments/runs/*
+!experiments/runs/.gitkeep
+
+outputs/figures/*
+outputs/reports/*
+!outputs/figures/.gitkeep
+!outputs/reports/.gitkeep
+
+# Notebooks
+.ipynb_checkpoints/ 
+notebooks/*.ipynb
