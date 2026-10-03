@@ -5,7 +5,6 @@ import json
 from dotenv import load_dotenv
 import os
 
-
 load_dotenv()
 
 TICKER_SYMBOLS = ["XLK", "XLC", "AAPL", "MSFT", "GOOGL", "META", "SPY"]
