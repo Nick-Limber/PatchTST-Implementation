@@ -1,9 +1,8 @@
 import pandas as pd
 
 def read_s3(access_key, secret_key, bucket_name, region, read_path):
+ 
 
-    
-    storage_options = {
         "key": access_key,
         "secret": secret_key,
         "client_kwargs": {
