@@ -1,0 +1,54 @@
+"""
+DEV ONLY -- one-time / occasional historical transform backfill.
+
+Run this by hand after ingest_historical.py has landed a new date range in
+S3. Not part of the production DAG -- transform.py's clean_daily_chain /
+engineer_features / construct_labels are the production, single-day
+functions that Airflow calls directly; this file just loops them over a
+range and gets the two-pass ordering right (see note below).
+
+Run:
+    python transform_historical.py
+"""
+
+from transform import (
+    LABEL_HORIZON_DAYS,
+    clean_daily_chain,
+    construct_labels,
+    engineer_features,
+)
+
+
+def run_historical_backfill(bucket: str, iso_dates: list[str],
+                             horizon_days: int = LABEL_HORIZON_DAYS) -> dict:
+    """
+    Two passes, not one loop of clean->features->labels per day: labels for
+    date X need date X+1..X+horizon to already be cleaned, so every day in
+    the range must finish clean+features before ANY day's labels can run.
+    """
+    clean_paths, feature_paths, label_paths = {}, {}, {}
+
+    for iso_date in iso_dates:
+        clean_paths[iso_date] = clean_daily_chain(bucket, iso_date)
+        feature_paths[iso_date] = engineer_features(bucket, iso_date, clean_paths[iso_date])
+
+    # Only label dates that actually have `horizon_days` of future dates
+    # within this same range -- the trailing `horizon_days` dates in this
+    # batch won't have labels until a later batch covers their forward window.
+    labelable_dates = iso_dates[:-horizon_days] if len(iso_dates) > horizon_days else []
+    for iso_date in labelable_dates:
+        label_paths[iso_date] = construct_labels(bucket, iso_date, horizon_days)
+
+    return {"clean": clean_paths, "features": feature_paths, "labels": label_paths}
+
+
+if __name__ == "__main__":
+    import os
+
+    import pandas as pd
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    bucket = os.environ["S3_BUCKET_NAME"]
+    iso_dates = [d.strftime("%Y-%m-%d") for d in pd.bdate_range("2023-01-01", "2026-01-01")]
+    run_historical_backfill(bucket, iso_dates)

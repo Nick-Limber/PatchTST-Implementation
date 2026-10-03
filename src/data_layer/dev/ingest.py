@@ -3,6 +3,8 @@ from datetime import date, timedelta
 import pandas as pd
 import json
 from dotenv import load_dotenv
+import os
+
 
 load_dotenv()
 
@@ -48,7 +50,7 @@ def ingest_eod (api_key, symbols, limit=1000, start_date=(date.today() - timedel
     df = pd.DataFrame(total_data)
     return df
 
-def load_data_s3(df, access_key, secret_key, bucket_name, region):
+def write_data_s3(df, access_key, secret_key, bucket_name, region):
         
     
     storage_options = {
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     print(f"Fetched {len(df)} rows across {df['symbol'].nunique()} tickers")
     print(df.head())
 
-    load_data_s3(
+    write_data_s3(
       df=df,
       bucket_name=bucket,
       access_key=aws_access,

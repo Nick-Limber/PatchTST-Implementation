@@ -1,10 +1,8 @@
 import pandas as pd
-import numpy as np
 
 def read_s3(access_key, secret_key, bucket_name, region, read_path):
+ 
 
-    
-    storage_options = {
         "key": access_key,
         "secret": secret_key,
         "client_kwargs": {
@@ -19,21 +17,25 @@ def read_s3(access_key, secret_key, bucket_name, region, read_path):
 
     return df
 
-def clean_df(df):
-
-    df = df["adjusted_close"].fillna((df["close"] - df["dividend"]) / df["split_factor"])
-
-    drop_cols = [ "open", "high", "low", "close", "last", "split_factor", "dividend", "exchange", "name", "asset_type", "price_currency", "exchange_code" ]
-    df = df.drop(columns=drop_cols)
-
+def get_stats(df):
+    
     print(f" datatypes: {df.info()}")
     print(f" total rows: {len(df)}")
-    
-    df["log_return"] = np.log(df["adjusted_close"] / df["adjusted_close"].shift(1))
+
+    symbols = df["symbol"].unique()
+    print(f"total symbols: {symbols}")
+
+    print(f"start date: {df['date'].min()}")
+    print(f"end date: {df['date'].max()}")
+
+    print(f"ROWS PER TICKER SYMBOL")
+    print(df.groupby("symbol").size())
+
+    print(df[df["asset_type"].notna()].head())
+    # ADD MORE EXPLORATION AS NEEDED
 
 
 if __name__ == "__main__":
-
     import os
     from dotenv import load_dotenv
 
@@ -44,8 +46,7 @@ if __name__ == "__main__":
     aws_region = os.environ["AWS_REGION"]
     bucket     = os.environ["S3_BUCKET_NAME"]
     read_path = "raw"
-    
-    df = read_s3(aws_access, aws_secret, bucket, aws_region, read_path)
 
-    clean_df(df)
+    df = read_s3(aws_access, aws_secret, bucket, aws_region, read_path)
+    get_stats(df)
 
